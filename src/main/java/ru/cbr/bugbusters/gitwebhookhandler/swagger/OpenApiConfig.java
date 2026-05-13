@@ -1,4 +1,4 @@
-package ru.cbr.bugbusters.gitwebhookhandler.config;
+package ru.cbr.bugbusters.gitwebhookhandler.swagger;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
+
 
 @Configuration
 public class OpenApiConfig {

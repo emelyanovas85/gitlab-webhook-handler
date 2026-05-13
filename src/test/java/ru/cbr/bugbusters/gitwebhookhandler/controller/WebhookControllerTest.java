@@ -18,7 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(WebhookController.class)
+@WebMvcTest(GitLabWebhookController.class)
 class WebhookControllerTest {
 
     @Autowired

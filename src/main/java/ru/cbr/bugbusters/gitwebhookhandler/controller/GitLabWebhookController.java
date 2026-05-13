@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/webhook")
 @RequiredArgsConstructor
 @Tag(name = "GitLab Webhook", description = "Приём и обработка webhook-ов от GitLab")
-public class WebhookController {
+public class GitLabWebhookController {
 
     private final GitLabWebhookService gitLabWebhookService;
 
