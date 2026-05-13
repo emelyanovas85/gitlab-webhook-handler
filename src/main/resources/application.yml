@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: gitlab-webhook-handler
+
+server:
+  port: 8080
+
+gitlab:
+  webhook:
+    # Set this to your GitLab webhook secret token for security
+    # Can also be set via environment variable: GITLAB_WEBHOOK_SECRET_TOKEN=mysecret
+    secret-token: ${GITLAB_WEBHOOK_SECRET_TOKEN:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.example.gitlabwebhookhandler: DEBUG
