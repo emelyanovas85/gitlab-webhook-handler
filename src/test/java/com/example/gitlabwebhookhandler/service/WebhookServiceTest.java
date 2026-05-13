@@ -23,12 +23,12 @@ class WebhookServiceTest {
     @Mock
     private GitLabEventHandler handlerB;
 
-    private WebhookService webhookService;
+    private GitLabWebhookService service;
     private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        webhookService = new WebhookService(List.of(handlerA, handlerB));
+        service = new GitLabWebhookService(List.of(handlerA, handlerB));
     }
 
     @Test
@@ -37,7 +37,7 @@ class WebhookServiceTest {
         when(handlerA.supports("Push Hook")).thenReturn(true);
         when(handlerB.supports("Push Hook")).thenReturn(false);
 
-        webhookService.process("Push Hook", null, payload);
+        service.process("Push Hook", null, payload);
 
         verify(handlerA).handle(payload);
         verify(handlerB, never()).handle(any());
@@ -49,7 +49,7 @@ class WebhookServiceTest {
         when(handlerA.supports("Push Hook")).thenReturn(true);
         when(handlerB.supports("Push Hook")).thenReturn(true);
 
-        webhookService.process("Push Hook", null, payload);
+        service.process("Push Hook", null, payload);
 
         verify(handlerA).handle(payload);
         verify(handlerB).handle(payload);
@@ -57,53 +57,43 @@ class WebhookServiceTest {
 
     @Test
     void shouldNotCallAnyHandlerWhenEventTypeIsNull() {
-        ObjectNode payload = mapper.createObjectNode();
-
-        webhookService.process(null, null, payload);
-
+        service.process(null, null, mapper.createObjectNode());
         verify(handlerA, never()).handle(any());
         verify(handlerB, never()).handle(any());
     }
 
     @Test
     void shouldNotCallAnyHandlerWhenEventTypeIsBlank() {
-        ObjectNode payload = mapper.createObjectNode();
-
-        webhookService.process("  ", null, payload);
-
+        service.process("  ", null, mapper.createObjectNode());
         verify(handlerA, never()).handle(any());
         verify(handlerB, never()).handle(any());
     }
 
     @Test
     void shouldThrowSecurityExceptionWhenTokenMismatch() {
-        ReflectionTestUtils.setField(webhookService, "secretToken", "correct-token");
-        ObjectNode payload = mapper.createObjectNode();
+        ReflectionTestUtils.setField(service, "secretToken", "correct-token");
 
-        assertThatThrownBy(() -> webhookService.process("Push Hook", "wrong-token", payload))
+        assertThatThrownBy(() -> service.process("Push Hook", "wrong-token", mapper.createObjectNode()))
                 .isInstanceOf(SecurityException.class)
                 .hasMessage("Invalid GitLab webhook token");
     }
 
     @Test
     void shouldPassWhenTokenMatchesSecret() {
-        ReflectionTestUtils.setField(webhookService, "secretToken", "correct-token");
-        ObjectNode payload = mapper.createObjectNode();
+        ReflectionTestUtils.setField(service, "secretToken", "correct-token");
         when(handlerA.supports("Push Hook")).thenReturn(true);
 
-        webhookService.process("Push Hook", "correct-token", payload);
+        service.process("Push Hook", "correct-token", mapper.createObjectNode());
 
-        verify(handlerA).handle(payload);
+        verify(handlerA).handle(any());
     }
 
     @Test
     void shouldSkipTokenValidationWhenSecretNotConfigured() {
-        // secretToken is empty by default
-        ObjectNode payload = mapper.createObjectNode();
         when(handlerA.supports("Push Hook")).thenReturn(false);
         when(handlerB.supports("Push Hook")).thenReturn(false);
 
-        // Should not throw
-        webhookService.process("Push Hook", "any-token", payload);
+        // должно не бросать исключений
+        service.process("Push Hook", "any-token", mapper.createObjectNode());
     }
 }
