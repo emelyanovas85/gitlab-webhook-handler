@@ -9,7 +9,7 @@ Spring Boot приложение для приёма и обработки webho
 - Spring Web MVC, Validation, Actuator, Lombok, Jackson
 
 ## Архитектура
-
+ 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    REST Controllers                     │
