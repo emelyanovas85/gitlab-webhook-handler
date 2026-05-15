@@ -26,29 +26,18 @@ public class GitLabWebhookController {
 
     @Operation(
             summary = "Принять GitLab webhook",
-            description = """
-                    Принимает события от GitLab: Push, Merge Request, Pipeline, Issue.
-
-                    Аутентификация: GitLab отправляет секретный токен в заголовке `X-Gitlab-Token`.
-                    Если токен не совпадает — возвращается `401 Unauthorized`.
-                    """
+            description = "Принимает события от GitLab: Push, Merge Request, Pipeline, Issue."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Webhook успешно обработан",
                     content = @Content(mediaType = MediaType.TEXT_PLAIN_VALUE,
                             examples = @ExampleObject(value = "Webhook processed"))),
-            @ApiResponse(responseCode = "401", description = "Неверный токен X-Gitlab-Token",
-                    content = @Content(mediaType = MediaType.TEXT_PLAIN_VALUE,
-                            examples = @ExampleObject(value = "Invalid GitLab webhook token"))),
             @ApiResponse(responseCode = "400", description = "Некорректный JSON в теле запроса")
     })
     @PostMapping("/gitlab")
     public ResponseEntity<String> handleGitLabWebhook(
             @Parameter(description = "Тип события GitLab", example = "Push Hook")
             @RequestHeader(value = "X-Gitlab-Event", required = false) String eventType,
-
-            @Parameter(description = "Секретный токен для верификации")
-            @RequestHeader(value = "X-Gitlab-Token", required = false) String token,
 
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Payload от GitLab",
@@ -73,11 +62,7 @@ public class GitLabWebhookController {
             @RequestBody ObjectNode payload) {
 
         log.info("Received GitLab webhook. Event: {}", eventType);
-        try {
-            gitLabWebhookService.process(eventType, token, payload);
-            return ResponseEntity.ok("Webhook processed");
-        } catch (SecurityException e) {
-            return ResponseEntity.status(401).body(e.getMessage());
-        }
+        gitLabWebhookService.process(eventType, payload);
+        return ResponseEntity.ok("Webhook processed");
     }
 }

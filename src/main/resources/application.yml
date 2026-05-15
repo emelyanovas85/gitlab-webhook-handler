@@ -5,12 +5,6 @@ spring:
 server:
   port: 8080
 
-webhook:
-  gitlab:
-    secret-token: ${WEBHOOK_GITLAB_SECRET_TOKEN:}
-  github:
-    secret-token: ${WEBHOOK_GITHUB_SECRET_TOKEN:}
-
 management:
   endpoints:
     web:
