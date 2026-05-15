@@ -1,7 +1,7 @@
 package ru.cbr.bugbusters.gitwebhookhandler.controllers;
 
 import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.gitlab.GitLabWebhookService;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -59,7 +59,7 @@ public class GitLabWebhookController {
                                               }
                                             }""")
                             }))
-            @RequestBody ObjectNode payload) {
+            @RequestBody JsonNode payload) {
 
         log.info("Received GitLab webhook. Event: {}", eventType);
         gitLabWebhookService.process(eventType, payload);
