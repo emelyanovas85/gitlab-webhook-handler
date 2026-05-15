@@ -1,6 +1,6 @@
 package ru.cbr.bugbusters.gitwebhookhandler.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Common interface for all webhook event handlers.
