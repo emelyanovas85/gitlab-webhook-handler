@@ -1,23 +1,23 @@
 package ru.cbr.bugbusters.gitwebhookhandler.controller;
 
-import ru.cbr.bugbusters.gitwebhookhandler.controllers.GitLabWebhookController;
-import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.gitlab.GitLabWebhookService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.cbr.bugbusters.gitwebhookhandler.common.config.AppProperties;
+import ru.cbr.bugbusters.gitwebhookhandler.controllers.GitLabWebhookController;
+import ru.cbr.bugbusters.gitwebhookhandler.webhook.service.GitLabWebhookDispatcher;
 
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(GitLabWebhookController.class)
 class WebhookControllerTest {
@@ -29,63 +29,56 @@ class WebhookControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private GitLabWebhookService gitLabWebhookService;
+    private GitLabWebhookDispatcher dispatcher;
+
+    @MockitoBean
+    private AppProperties appProperties;
 
     @Test
-    void shouldReturn200AndDelegateToServiceForPushHook() throws Exception {
+    void shouldReturn202AndDelegateForNoteHook() throws Exception {
+        AppProperties.GitLabProperties gitlabProps = new AppProperties.GitLabProperties(
+                "http://localhost", "token", "changeme");
+        org.mockito.Mockito.when(appProperties.gitlab()).thenReturn(gitlabProps);
+
         String payload = objectMapper.writeValueAsString(Map.of(
-                "ref", "refs/heads/main",
-                "user_name", "john.doe",
-                "total_commits_count", 3
+                "object_kind", "note",
+                "event_type", "note"
         ));
 
-        mockMvc.perform(post("/api/webhook/gitlab")
-                        .header("X-Gitlab-Event", "Push Hook")
-                        .header("X-Gitlab-Token", "secret")
+        mockMvc.perform(post("/api/v1/webhooks/gitlab")
+                        .header("X-Gitlab-Event", "Note Hook")
+                        .header("X-Gitlab-Token", "changeme")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Webhook processed"));
+                .andExpect(status().isAccepted());
 
-        verify(gitLabWebhookService).process(eq("Push Hook"), eq("secret"), any());
+        verify(dispatcher).dispatch(eq("Note Hook"), any());
     }
 
     @Test
-    void shouldReturn200ForMergeRequestHook() throws Exception {
-        String payload = objectMapper.writeValueAsString(Map.of(
-                "object_attributes", Map.of(
-                        "title", "Fix bug",
-                        "state", "opened",
-                        "source_branch", "feature/fix",
-                        "target_branch", "main"
-                )
-        ));
+    void shouldReturn403WhenTokenInvalid() throws Exception {
+        AppProperties.GitLabProperties gitlabProps = new AppProperties.GitLabProperties(
+                "http://localhost", "token", "changeme");
+        org.mockito.Mockito.when(appProperties.gitlab()).thenReturn(gitlabProps);
 
-        mockMvc.perform(post("/api/webhook/gitlab")
-                        .header("X-Gitlab-Event", "Merge Request Hook")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Webhook processed"));
-    }
-
-    @Test
-    void shouldReturn200WhenNoEventTypeHeader() throws Exception {
-        mockMvc.perform(post("/api/webhook/gitlab")
+        mockMvc.perform(post("/api/v1/webhooks/gitlab")
+                        .header("X-Gitlab-Event", "Note Hook")
+                        .header("X-Gitlab-Token", "wrong-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    void shouldReturn401WhenServiceThrowsSecurityException() throws Exception {
-        doThrow(new SecurityException("Invalid GitLab webhook token"))
-                .when(gitLabWebhookService).process(any(), any(), any());
+    void shouldReturn403WhenTokenMissing() throws Exception {
+        AppProperties.GitLabProperties gitlabProps = new AppProperties.GitLabProperties(
+                "http://localhost", "token", "changeme");
+        org.mockito.Mockito.when(appProperties.gitlab()).thenReturn(gitlabProps);
 
-        mockMvc.perform(post("/api/webhook/gitlab")
-                        .header("X-Gitlab-Event", "Push Hook")
+        mockMvc.perform(post("/api/v1/webhooks/gitlab")
+                        .header("X-Gitlab-Event", "Note Hook")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 }

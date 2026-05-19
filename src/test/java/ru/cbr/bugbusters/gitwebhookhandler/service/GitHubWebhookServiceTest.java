@@ -1,15 +1,15 @@
 package ru.cbr.bugbusters.gitwebhookhandler.service;
 
-import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.github.GitHubEventHandler;
-import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.github.GitHubWebhookService;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.github.GitHubEventHandler;
+import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.github.GitHubWebhookService;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -39,7 +39,7 @@ class GitHubWebhookServiceTest {
 
     @Test
     void shouldDelegateToMatchingHandler() {
-        ObjectNode payload = mapper.createObjectNode();
+        JsonNode payload = mapper.createObjectNode();
         when(handlerA.supports("push")).thenReturn(true);
         when(handlerB.supports("push")).thenReturn(false);
 
@@ -86,7 +86,7 @@ class GitHubWebhookServiceTest {
 
         when(handlerA.supports("push")).thenReturn(true);
 
-        ObjectNode payload = (ObjectNode) mapper.readTree(body);
+        JsonNode payload = mapper.readTree(body);
         service.process("push", sig, body, payload);
 
         verify(handlerA).handle(payload);
@@ -97,7 +97,6 @@ class GitHubWebhookServiceTest {
         when(handlerA.supports("push")).thenReturn(false);
         when(handlerB.supports("push")).thenReturn(false);
 
-        // должно не бросать исключений
         service.process("push", null, "{}", mapper.createObjectNode());
     }
 }

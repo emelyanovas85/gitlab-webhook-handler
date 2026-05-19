@@ -1,7 +1,5 @@
 package ru.cbr.bugbusters.gitwebhookhandler.service;
 
-import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.gitlab.GitLabEventHandler;
-import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.gitlab.GitLabWebhookService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.gitlab.GitLabEventHandler;
+import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.gitlab.GitLabWebhookService;
 
 import java.util.List;
 
@@ -73,7 +72,7 @@ class WebhookServiceTest {
 
     @Test
     void shouldThrowSecurityExceptionWhenTokenMismatch() {
-        ReflectionTestUtils.setField(service, "secretToken", "correct-token");
+        service = createServiceWithToken("correct-token");
 
         assertThatThrownBy(() -> service.process("Push Hook", "wrong-token", mapper.createObjectNode()))
                 .isInstanceOf(SecurityException.class)
@@ -82,7 +81,7 @@ class WebhookServiceTest {
 
     @Test
     void shouldPassWhenTokenMatchesSecret() {
-        ReflectionTestUtils.setField(service, "secretToken", "correct-token");
+        service = createServiceWithToken("correct-token");
         when(handlerA.supports("Push Hook")).thenReturn(true);
 
         service.process("Push Hook", "correct-token", mapper.createObjectNode());
@@ -95,7 +94,18 @@ class WebhookServiceTest {
         when(handlerA.supports("Push Hook")).thenReturn(false);
         when(handlerB.supports("Push Hook")).thenReturn(false);
 
-        // должно не бросать исключений
         service.process("Push Hook", "any-token", mapper.createObjectNode());
+    }
+
+    private GitLabWebhookService createServiceWithToken(String token) {
+        GitLabWebhookService svc = new GitLabWebhookService(List.of(handlerA, handlerB));
+        try {
+            var field = GitLabWebhookService.class.getDeclaredField("secretToken");
+            field.setAccessible(true);
+            field.set(svc, token);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return svc;
     }
 }

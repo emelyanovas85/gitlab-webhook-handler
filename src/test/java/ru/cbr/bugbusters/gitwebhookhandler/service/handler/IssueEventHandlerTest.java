@@ -1,5 +1,6 @@
 package ru.cbr.bugbusters.gitwebhookhandler.service.handler;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,11 +42,11 @@ class IssueEventHandlerTest {
         payload.set("object_attributes", attrs);
         payload.set("user", user);
 
-        assertThatCode(() -> handler.handle(payload)).doesNotThrowAnyException();
+        assertThatCode(() -> handler.handle((JsonNode) payload)).doesNotThrowAnyException();
     }
 
     @Test
     void shouldHandleEmptyPayloadGracefully() {
-        assertThatCode(() -> handler.handle(mapper.createObjectNode())).doesNotThrowAnyException();
+        assertThatCode(() -> handler.handle((JsonNode) mapper.createObjectNode())).doesNotThrowAnyException();
     }
 }

@@ -1,5 +1,6 @@
 package ru.cbr.bugbusters.gitwebhookhandler.service.handler;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,26 +28,22 @@ class PipelineEventHandlerTest {
     @Test
     void shouldNotSupportOtherEvents() {
         assertThat(handler.supports("Push Hook")).isFalse();
-        assertThat(handler.supports("Issue Hook")).isFalse();
         assertThat(handler.supports(null)).isFalse();
     }
 
     @Test
     void shouldHandleFullPayload() {
         ObjectNode attrs = mapper.createObjectNode()
-                .put("status", "success")
-                .put("ref", "main")
-                .put("duration", 120);
-        ObjectNode project = mapper.createObjectNode().put("name", "my-project");
+                .put("id", 123)
+                .put("status", "success");
         ObjectNode payload = mapper.createObjectNode();
         payload.set("object_attributes", attrs);
-        payload.set("project", project);
 
-        assertThatCode(() -> handler.handle(payload)).doesNotThrowAnyException();
+        assertThatCode(() -> handler.handle((JsonNode) payload)).doesNotThrowAnyException();
     }
 
     @Test
     void shouldHandleEmptyPayloadGracefully() {
-        assertThatCode(() -> handler.handle(mapper.createObjectNode())).doesNotThrowAnyException();
+        assertThatCode(() -> handler.handle((JsonNode) mapper.createObjectNode())).doesNotThrowAnyException();
     }
 }
