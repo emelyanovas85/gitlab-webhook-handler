@@ -35,6 +35,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-webmvc-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    implementation("org.apache.httpcomponents.client5:httpclient5:5.3")
+            implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
 }
 
 tasks.withType<Test> {
