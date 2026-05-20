@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.5.6"
+    id("org.springframework.boot") version "3.5.14"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -21,11 +21,9 @@ configurations {
 
 repositories {
     mavenCentral()
-    // fallback: Spring AI 1.0.0 BOM ещё не у всех прокси-репозиториев
-    maven { url = uri("https://repo.spring.io/release") }
 }
 
-extra["springAiVersion"] = "1.0.0"
+extra["springAiVersion"] = "1.0.6"
 
 dependencyManagement {
     imports {
@@ -41,9 +39,6 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     runtimeOnly("com.h2database:h2")
 
-    // В Spring AI 1.0.0 GA стартер переименован:
-    // spring-ai-openai-spring-boot-starter (до 1.0.0-M6)
-    // -> spring-ai-starter-model-openai (с 1.0.0 GA)
     implementation("org.springframework.ai:spring-ai-starter-model-openai")
     implementation("org.gitlab4j:gitlab4j-api:6.0.0")
     implementation("com.fasterxml.jackson.core:jackson-databind")
