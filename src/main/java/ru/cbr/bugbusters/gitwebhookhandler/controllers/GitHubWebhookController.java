@@ -1,8 +1,7 @@
 package ru.cbr.bugbusters.gitwebhookhandler.controllers;
 
-import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.github.GitHubWebhookService;
-import tools.jackson.databind.node.ObjectNode;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.cbr.bugbusters.gitwebhookhandler.service.handlers.github.GitHubWebhookService;
 
 @Slf4j
 @RestController
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class GitHubWebhookController {
 
     private final GitHubWebhookService gitHubWebhookService;
+    private final ObjectMapper objectMapper;
 
     @Operation(
             summary = "Принять GitHub webhook",
@@ -77,8 +78,7 @@ public class GitHubWebhookController {
     ) {
         log.info("Received GitHub webhook. Event: {}", eventType);
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode payload = (ObjectNode) mapper.readTree(rawBody);
+            JsonNode payload = objectMapper.readTree(rawBody);
             gitHubWebhookService.process(eventType, signature, rawBody, payload);
             return ResponseEntity.ok("Webhook processed");
         } catch (SecurityException e) {
