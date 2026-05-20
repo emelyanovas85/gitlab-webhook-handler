@@ -6,5 +6,8 @@ import ru.cbr.bugbusters.gitwebhookhandler.service.WebhookEventHandler;
 public interface GitHubEventHandler extends WebhookEventHandler {
 
     @Override
+    boolean supports(String eventType);
+
+    @Override
     void handle(JsonNode payload);
 }
