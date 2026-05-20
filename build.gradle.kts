@@ -21,6 +21,8 @@ configurations {
 
 repositories {
     mavenCentral()
+    // fallback: Spring AI 1.0.0 BOM ещё не у всех прокси-репозиториев
+    maven { url = uri("https://repo.spring.io/release") }
 }
 
 extra["springAiVersion"] = "1.0.0"
@@ -39,8 +41,10 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     runtimeOnly("com.h2database:h2")
 
-    // Spring AI 1.0.0 GA — в Maven Central, требует Spring Boot 3.4+ / 3.5+
-    implementation("org.springframework.ai:spring-ai-openai-spring-boot-starter")
+    // В Spring AI 1.0.0 GA стартер переименован:
+    // spring-ai-openai-spring-boot-starter (до 1.0.0-M6)
+    // -> spring-ai-starter-model-openai (с 1.0.0 GA)
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
     implementation("org.gitlab4j:gitlab4j-api:6.0.0")
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
