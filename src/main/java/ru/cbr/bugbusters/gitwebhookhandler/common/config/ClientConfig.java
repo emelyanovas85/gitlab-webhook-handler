@@ -22,14 +22,13 @@ public class ClientConfig {
     }
 
     /**
-     * @Lazy — бин создаётся только при первом обращении.
-     * Позволяет приложению стартовать без реального OPENAI_API_KEY
-     * (например, в CI/CD без LLM или при локальном тестировании).
-     * При реальном вызове review OPENAI_API_KEY должен быть задан через env.
+     * ChatClient.Builder используется для создания изолированных ChatClient
+     * для каждого контекста (в MrReviewOrchestrator).
+     * @Lazy — позволяет стартовать без реального OPENAI_API_KEY.
      */
     @Bean
     @Lazy
-    public ChatClient chatClient(OpenAiChatModel chatModel) {
-        return ChatClient.builder(chatModel).build();
+    public ChatClient.Builder chatClientBuilder(OpenAiChatModel chatModel) {
+        return ChatClient.builder(chatModel);
     }
 }

@@ -4,21 +4,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.cbr.bugbusters.gitwebhookhandler.webhook.domain.NoteHookPayload;
+import ru.cbr.bugbusters.gitwebhookhandler.webhook.domain.MergeRequestHookPayload;
 
+/**
+ * Диспетчер GitLab webhook-ов.
+ * Получает события от webhook-distributor-client и маршрутизирует к нужному хендлеру.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class GitLabWebhookDispatcher {
 
     private final ObjectMapper objectMapper;
-    private final NoteHookHandler noteHookHandler;
+    private final MergeRequestHookHandler mergeRequestHookHandler;
 
     public void dispatch(String eventType, String rawPayload) {
         try {
-            if ("Note Hook".equalsIgnoreCase(eventType)) {
-                NoteHookPayload payload = objectMapper.readValue(rawPayload, NoteHookPayload.class);
-                noteHookHandler.handle(payload);
+            if ("Merge Request Hook".equalsIgnoreCase(eventType)) {
+                MergeRequestHookPayload payload = objectMapper.readValue(rawPayload, MergeRequestHookPayload.class);
+                mergeRequestHookHandler.handle(payload);
                 return;
             }
             log.debug("Ignoring unsupported GitLab event: {}", eventType);

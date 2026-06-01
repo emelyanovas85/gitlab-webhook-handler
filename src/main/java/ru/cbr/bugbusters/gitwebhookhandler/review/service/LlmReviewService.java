@@ -3,43 +3,54 @@ package ru.cbr.bugbusters.gitwebhookhandler.review.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import ru.cbr.bugbusters.gitwebhookhandler.common.config.AppProperties;
 import ru.cbr.bugbusters.gitwebhookhandler.review.domain.GroupReviewResult;
 
+/**
+ * Запускает LLM-ревью для одного контекста.
+ * Каждый вызов создаёт изолированный ChatClient с тулами граф-сервиса.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class LlmReviewService {
 
-    private final ChatClient chatClient;
+    private final ChatClient.Builder chatClientBuilder;
     private final AppProperties appProperties;
+    // ObjectProvider позволяет получать prototype-бины (по одному на каждый контекст)
+    private final ObjectProvider<GraphServiceToolsProvider> toolsProviderFactory;
 
-    public GroupReviewResult review(MrRagContextClient.ReviewGroupContext context) {
+    /**
+     * Выполняет ревью одного контекста.
+     *
+     * @param index   порядковый номер контекста
+     * @param context текст контекста (код для ревью), полученный от граф-сервиса
+     * @return результат ревью
+     */
+    public GroupReviewResult review(int index, String context) {
         try {
-            String response = chatClient.prompt()
+            GraphServiceToolsProvider tools = toolsProviderFactory.getObject();
+            String response = chatClientBuilder.build()
+                    .prompt()
                     .system(appProperties.ai().systemPrompt())
-                    .user(buildPrompt(context))
+                    .user(buildPrompt(index, context))
+                    .tools(tools)
                     .call()
                     .content();
-            return GroupReviewResult.success(
-                    context.groupName(),
-                    response == null ? "No issues found." : response);
+            return GroupReviewResult.success(index, response == null ? "No issues found." : response);
         } catch (Exception e) {
-            log.error("LLM request failed for group {}", context.groupName(), e);
-            return GroupReviewResult.failure(context.groupName(), e.getMessage());
+            log.error("LLM request failed for context index={}", index, e);
+            return GroupReviewResult.failure(index, e.getMessage());
         }
     }
 
-    private String buildPrompt(MrRagContextClient.ReviewGroupContext context) {
+    private String buildPrompt(int index, String context) {
         return """
-                ## Change group: %s
+                ## Context group #%d
 
-                ### Diff summary:
                 %s
-
-                ### Enriched context:
-                %s
-                """.formatted(context.groupName(), context.diffSummary(), context.enrichedContext());
+                """.formatted(index + 1, context);
     }
 }

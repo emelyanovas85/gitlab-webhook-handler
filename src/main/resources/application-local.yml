@@ -1,18 +1,15 @@
-# Локальный профиль — содержит чувствительные данные.
-# TODO: добавить этот файл в .gitignore, чтобы он не попал в репозиторий.
+# Локальный профиль — переопределяет значения для разработки
+# Не коммитить реальные ключи!
+app:
+  gitlab:
+    url: http://rct-gl.portal.cbr.ru
+    token: ${GITLAB_TOKEN:changeme}
+    webhook-token: ${GITLAB_WEBHOOK_TOKEN:changeme}
+  graph-service:
+    url: http://localhost:8090
 
 spring:
   ai:
     openai:
-      base-url: https://chat.ehd-zr.cbr.ru
-      api-key: sk-09fd660cdc8640ac861fe85a16d2d2f1
-      chat:
-        options:
-          model: Qwen/Qwen3-VL-235B-A22B-Instruct-FP8
-        completions-path: /openai/chat/completions
-
-app:
-  gitlab:
-    url: http://localhost
-    token: changeme
-    webhook-token: changeme
+      api-key: ${OPENAI_API_KEY:dummy}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}

@@ -1,24 +1,12 @@
 spring:
   application:
-    name: webhook-handler
+    name: git-webhook-handler
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
-  datasource:
-    url: jdbc:h2:mem:reviewdb;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  jpa:
-    hibernate:
-      ddl-auto: none
-    open-in-view: false
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
   ai:
     openai:
       base-url: ${OPENAI_BASE_URL:https://api.openai.com}
-      # Задаётся через переменную окружения OPENAI_API_KEY в runtime
+      # OPENAI_API_KEY задаётся через переменную окружения в runtime
       # или через application-local.yml (локальный профиль).
       # placeholder 'dummy' позволяет приложению стартовать без реального ключа.
       api-key: ${OPENAI_API_KEY:dummy}
@@ -26,8 +14,6 @@ spring:
         options:
           model: ${OPENAI_MODEL:gpt-4o-mini}
           temperature: 0.3
-        # Путь к endpoint completions — может отличаться у не-OpenAI провайдеров.
-        # Переопределяется в application-local.yml или через переменную окружения.
         completions-path: ${OPENAI_COMPLETIONS_PATH:/v1/chat/completions}
 
 server:
@@ -57,16 +43,23 @@ app:
     url: ${GITLAB_URL:http://localhost}
     token: ${GITLAB_TOKEN:changeme}
     webhook-token: ${GITLAB_WEBHOOK_TOKEN:changeme}
-  review:
-    trigger-command: ${REVIEW_TRIGGER_COMMAND:review}
-    mr-rag-url: ${MR_RAG_URL:http://localhost:8081}
+  graph-service:
+    # Базовый URL граф-сервиса
+    url: ${GRAPH_SERVICE_URL:http://localhost:8090}
   ai:
     system-prompt: |
-      You are an experienced Java developer and code reviewer.
-      Analyze only the provided context and diff summary.
-      Reply concisely and in structured markdown format.
-      Use the following sections:
-      - What was found
-      - Why it matters
-      - What to fix
-      If there are no issues, state that explicitly.
+      You are a senior Java developer performing a thorough code review.
+      You will receive a code context (a group of related files and changes).
+      Your task:
+      1. Identify bugs, security issues, performance problems, and code quality concerns.
+      2. Check adherence to SOLID principles and clean code practices.
+      3. If you need to understand a dependency or related class, use the available tools to fetch additional context.
+      4. Provide your review in structured markdown:
+         ### Issues Found
+         List each issue with: severity (CRITICAL / MAJOR / MINOR), location, description, suggested fix.
+         ### Positive Aspects
+         Note well-written parts.
+         ### Summary
+         One paragraph overall assessment.
+      If no issues are found, state that explicitly.
+      Respond in the same language as the code comments, or in English if unclear.
