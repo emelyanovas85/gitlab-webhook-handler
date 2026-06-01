@@ -38,11 +38,33 @@ springdoc:
     tags-sorter: alpha
     display-request-duration: true
 
+# Настройки подписки на webhook-distributor
+# (параметры WebhookClientProperties из библиотеки webhook-distributor-client)
+webhook:
+  client:
+    # Базовый URL webhook-distributor
+    server-url: ${WEBHOOK_DISTRIBUTOR_URL:http://localhost:8080}
+    # Уникальный идентификатор этого сервиса среди всех подписчиков
+    subscriber-id: git-webhook-handler
+    # Источник webhook-событий (должен совпадать с source в webhook-distributor)
+    source: gitlab
+    # Логическая метка этого обработчика (сервер её не вызывает по HTTP)
+    target-endpoint: gitlab.merge-request
+    # Фильтр типов событий — принимаем только Merge Request Hook
+    event-type-filter:
+      - Merge Request Hook
+    # Запрашивать пропущенные события при переподключении
+    missed-events-on-reconnect: true
+    reconnect-delay-ms: 3000
+    max-reconnect-delay-ms: 60000
+    version-check:
+      enabled: true
+      fail-on-mismatch: true
+
 app:
   gitlab:
     url: ${GITLAB_URL:http://localhost}
     token: ${GITLAB_TOKEN:changeme}
-    webhook-token: ${GITLAB_WEBHOOK_TOKEN:changeme}
   graph-service:
     # Базовый URL граф-сервиса
     url: ${GRAPH_SERVICE_URL:http://localhost:8090}
