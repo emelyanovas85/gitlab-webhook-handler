@@ -43,7 +43,7 @@ springdoc:
 webhook:
   client:
     # Базовый URL webhook-distributor
-    server-url: ${WEBHOOK_DISTRIBUTOR_URL:http://localhost:8080}
+    server-url: ${WEBHOOK_DISTRIBUTOR_URL:http://10.1.5.97:8081}
     # Уникальный идентификатор этого сервиса среди всех подписчиков
     subscriber-id: git-webhook-handler
     # Источник webhook-событий (должен совпадать с source в webhook-distributor)
@@ -55,11 +55,9 @@ webhook:
       - Merge Request Hook
     # Запрашивать пропущенные события при переподключении
     missed-events-on-reconnect: true
+    missed-events-batch-size: 50
     reconnect-delay-ms: 3000
-    max-reconnect-delay-ms: 60000
-    version-check:
-      enabled: true
-      fail-on-mismatch: true
+    max-reconnect-delay-ms: 30000
 
 app:
   gitlab:
@@ -71,5 +69,5 @@ app:
   ai:
     # Путь к файлу с system prompt. Можно переопределить через переменную окружения
     # или указать file:-путь для монтирования промпта снаружи контейнера.
-    # Пример: APP_AI_PROMPT-FILE=file:/etc/mr-checker/system-prompt.md
+    # Пример: APP_AI_PROMPT_FILE=file:/etc/mr-checker/system-prompt.md
     prompt-file: ${APP_AI_PROMPT_FILE:classpath:prompts/system-prompt.md}
